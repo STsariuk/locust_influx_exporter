@@ -14,4 +14,3 @@ class Config:
         self.wait_time_min = float(config.get('WAIT_TIME_MIN', os.getenv('WAIT_TIME_MIN')))
         self.wait_time_max = float(config.get('WAIT_TIME_MAX', os.getenv('WAIT_TIME_MAX')))
         self.influxdb_host = config.get('INFLUXDB_HOST', os.getenv('INFLUXDB_HOST'))
-        self.job_url = f'http://jobs.{url}'
