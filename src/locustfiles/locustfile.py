@@ -4,6 +4,9 @@ from locust import HttpUser, between
 from config.config import Config
 
 from src.locustfiles.tests.visitor import SiteVisitor
+from locust_influx import expose_metrics
+
+expose_metrics(interval_ms=2000)
 
 
 class TestExecution(HttpUser):

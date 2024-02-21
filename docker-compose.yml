@@ -1,0 +1,76 @@
+version: '3.7'
+
+services:
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+      - "8088:8088"
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - influxdb
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
+
+  master:
+    build: .
+    container_name: locust-master
+    ports:
+      - "8089:8089"
+      - "5557:5557"
+      - "5558:5558"
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - monitor-net
+    volumes:
+      - /home/ubuntu/docker_locust/results:/reports
+    environment:
+      - BASE_URL=locust.io
+      - INFLUXDB_HOST=influxdb
+      - LOCUSTFILE=src/locustfiles/locustfile.py
+      - WAIT_TIME_MIN=2
+      - WAIT_TIME_MAX=5
+    command: locust -f src/locustfiles/locustfile.py -headless -u 10 -r 1 -t 300 --master --html reports/report.html
+
+  worker:
+    build: .
+    networks:
+      - monitor-net
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      - BASE_URL=locust.io
+      - INFLUXDB_HOST=influxdb
+      - LOCUSTFILE=src/locustfiles/locustfile.py
+      - WAIT_TIME_MIN=2
+      - WAIT_TIME_MAX=5
+    command: locust -f src/locustfiles/locustfile.py --worker --master-host=master
+    depends_on:
+      - master
+networks:
+  monitor-net:
+    driver: bridge
