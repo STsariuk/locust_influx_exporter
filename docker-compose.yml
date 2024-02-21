@@ -11,9 +11,8 @@ services:
       - monitor-net
     labels:
       org.label-schema.group: "monitoring"
-
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:8.4.5
     container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
@@ -30,7 +29,6 @@ services:
       - monitor-net
     labels:
       org.label-schema.group: "monitoring"
-
   master:
     build: .
     container_name: locust-master
@@ -45,15 +43,14 @@ services:
     networks:
       - monitor-net
     volumes:
-      - /home/ubuntu/docker_locust/results:/reports
+      - ./reports:/reports
     environment:
       - BASE_URL=locust.io
       - INFLUXDB_HOST=influxdb
-      - LOCUSTFILE=src/locustfiles/locustfile.py
+      - LOCUST_LOCUSTFILE=src/locustfiles/locustfile.py
       - WAIT_TIME_MIN=2
       - WAIT_TIME_MAX=5
-    command: locust -f src/locustfiles/locustfile.py -headless -u 10 -r 1 -t 300 --master --html reports/report.html
-
+    command: locust -f src/locustfiles/locustfile.py --headless -u 10 -r 1 -t 300 --master --html reports/report.html
   worker:
     build: .
     networks:
@@ -65,7 +62,7 @@ services:
     environment:
       - BASE_URL=locust.io
       - INFLUXDB_HOST=influxdb
-      - LOCUSTFILE=src/locustfiles/locustfile.py
+      - LOCUST_LOCUSTFILE=src/locustfiles/locustfile.py
       - WAIT_TIME_MIN=2
       - WAIT_TIME_MAX=5
     command: locust -f src/locustfiles/locustfile.py --worker --master-host=master

@@ -9,14 +9,14 @@ class Actions(BaseTaskSet):
 
     def main_page(self):
         with self.client.get('/', catch_response=True,
-                             name=self.parent.conf.base_url) as mp_response:
+                             name=f'{self.parent.conf.base_url.replace("http:/", "")}') as mp_response:
             self.validate_response(response=mp_response)
             doc_url = re.findall('href="(.*?)/installation.html">documentation', mp_response.text)[0]
         return doc_url
 
     def documentation(self, doc_url: str):
         with self.client.get(doc_url, catch_response=True,
-                             name=doc_url) as response:
+                             name=f'{doc_url.replace("https:/", "")}') as response:
             self.validate_response(response=response)
 
     def about(self, doc_url: str):
